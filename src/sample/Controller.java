@@ -10,23 +10,23 @@ import javafx.stage.Stage;
 public class Controller {
 
     Model model = new Model();
+    String command;
 
+    // this is the view
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
         primaryStage.setTitle("Home");
         primaryStage.setScene(new Scene(root, 300, 275));
-        primaryStage.show();
+        primaryStage.show(); //enable view
     }
 
-    public void buttonPressed(Event event) {
-        Button b = (Button) event.getSource();
-        System.out.println("Button pressed: " + b.getText());
+    public void listFiles () {
+        command = "ls /home/ma/bin";
+        System.out.println(model.getShellOutput(command));
     }
 
-    public void listFiles (Event event) {
-        String command = "ls /home/ma/";
-        Button b = (Button) event.getSource();
-        model.executeShellCommand(command);
+    public void exit () {
+        System.exit(0); // don't want to exit immediately
     }
 
 }
