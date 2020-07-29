@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+
+### HELP
+
+#If no argument, display mini-help.
+#
+SCRIPT_HELP_DIRECTORY=deployScripts
+
+if [[ -z $1 ]]
+then
+. ./$SCRIPT_HELP_DIRECTORY/miniHelp
+fi
+#
+# help page
+if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]
+then
+. ./$SCRIPT_HELP_DIRECTORY/help
+fi
+
+### ACTIONS
+
+if [[ "$1" == "install" ]]
+then
+cd $HOME
+
+### BACKUP
+
+## DEMO OF WHAT IT WAS BEFORE
+#.bash_aliases
+#if [ -f $HOME/.bash_aliases ]
+#then
+#echo "Found $HOME/.bash_aliases"
+#echo "  Renaming to $HOME/.bash_aliases.pre-deploy"
+#mv $HOME/.bash_aliases $HOME/.bash_aliases.pre-deploy
+#else
+#echo ".bash_aliases not found, installing from github..."
+#fi
+
+cd $HOME/home
+git ls-tree --name-only master > trackedFiles.txt
+cd $HOME
+
+EXTENSION=pre-deploy
+
+for FILE in $(cat $HOME/home/trackedFiles.txt); do
+	if mv "$HOME/$FILE" "$HOME/$FILE.$EXTENSION"
+	then
+	echo "How to do nothing when a command is sucessful?"
+	else
+	:	
+	fi
+done
+
+### IF BACKUP SUCCESS THEN DEPLOY WORK TREE
+
+echo "Converting ~/home repo into"
+echo "~/.home bare repo"
+mv $HOME/home/.git $HOME/.home
+rm -fr $HOME/home
+cd $HOME/.home
+git config --bool core.bare true
+cd $HOME
+echo "Checking out master branch in $HOME"
+/usr/bin/git --git-dir=$HOME/.home --work-tree=$HOME \
+checkout master .
+fi
+
+### UNINSTALL
+
+if [[ "$1" == "uninstall" ]]
+then
+cd $HOME
+echo "Removing dotfiles and submodules..."
+/usr/bin/git --git-dir=$HOME/.home --work-tree=$HOME \
+rm -rf .
+echo "Creating ~/home directory"
+mkdir $HOME/home
+mv $HOME/.home $HOME/home/.git
+rm -rf $HOME/.home
+echo "Converting ~/home/.git into a non-bare git repo"
+cd $HOME/home/.git
+git config --bool core.bare false
+cd $HOME/home
+echo "Checking out master branch in $HOME/home"
+git checkout master .
+
+echo "Putting backed up files in their original place prior to"
+echo "installation of this program."
+
+BACKUP_EXTENSION=pre-deploy
+cd $HOME
+rename -v "s/\.$BACKUP_EXTENSION$//" *.$BACKUP_EXTENSION
+fi
