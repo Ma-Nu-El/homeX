@@ -21,6 +21,24 @@ fi
 
 if [[ "$1" == "install" ]]
 then
+
+#ls -al $HOME > $HOME/auxLs
+#grep "
+#for FILE in $(cat $HOME/auxLs); do
+	#if mv "$HOME/$FILE" "$HOME/$FILE.$BACKUP_EXTENSION"
+	#if [[ -f  ]] || [[ -d  ]]
+	#'.pre-deploy' extention
+#	then
+#	echo "There are already files/directories that contain the extension"
+#	echo "'.pre-deploy'. That is a sign that there's someone else's 'home'"
+#	echo "already installed in this \$HOME directory."
+#	echo "Please remove or backup the files that contain the '.pre-deploy'"
+#	echo "extension so there won't be any conflicts." 
+#	else
+#	:	
+#	fi
+#done
+
 cd $HOME
 
 ### BACKUP
@@ -40,10 +58,10 @@ cd $HOME/home
 git ls-tree --name-only master > trackedFiles.txt
 cd $HOME
 
-EXTENSION=pre-deploy
+BACKUP_EXTENSION=pre-deploy
 
 for FILE in $(cat $HOME/home/trackedFiles.txt); do
-	if mv "$HOME/$FILE" "$HOME/$FILE.$EXTENSION"
+	if mv "$HOME/$FILE" "$HOME/$FILE.$BACKUP_EXTENSION"
 	then
 	echo "How to do nothing when a command is sucessful?"
 	else
@@ -90,4 +108,28 @@ echo "installation of this program."
 BACKUP_EXTENSION=pre-deploy
 cd $HOME
 rename -v "s/\.$BACKUP_EXTENSION$//" *.$BACKUP_EXTENSION
+fi
+
+### ENCRYPT AND DECRYPT
+
+if [[ "$1" == "encrypt" ]]
+then
+    tar cf aux$2 $2 # create archive named aux$2 which contains the content of $2
+    rm -rf $2 # remove original directory/file
+    mv aux$2 $2 # now the archive aux$2 becomes just $2
+    gpg --symmetric $2 # regular symmetric encryption
+    rm -rf $2 # remove unencrypted original archive
+    mv $2.gpg $2 # remove '.gpg' extension of encrypted file
+fi
+
+if [[ "$1" == "decrypt" ]]
+then
+    gpg --decrypt $2 > aux$2 # decrypt file to auxiliary file
+    rm -rf $2 # remove encrypted file
+    mv aux$2 $2 # now the decrypted file is renamed to its correspondent name
+    mkdir $2Aux
+    tar xf $2 -C $2Aux # regular archive extraction
+    rm -rf $2
+    mv $2Aux/* ./
+    rm -rf $2Aux
 fi
